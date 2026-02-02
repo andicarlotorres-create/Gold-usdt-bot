@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: gold-usdt-bot
+    env: python
+    region: oregon
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    envVars:
+      - key: TELEGRAM_TOKEN
+        value: 8519041982:AAG9y3iaC9S9nk2bOo5rkI1-OMcXgsavG2o
+      - key: ADMIN_ID
+        value: 6667062973
+    plan: free
+    autoDeploy: true
+    healthCheckPath: /health
