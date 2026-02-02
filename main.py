@@ -93,7 +93,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 referrer_data['referrals'].append(user_id)
                 referrer_data['balance'] = round(referrer_data['balance'] + REFERRAL_BONUS, 2)
                 update_user(referrer_id, referrer_data)
-                await update.message.reply_text(f"🎉 ¡Te has unido mediante referido! +{REFERRAL_BONUS} USDT para tu referidor.")
     
     update_user(user_id, user_data)
     
@@ -136,10 +135,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 *🔗 Tu enlace de referidos:*
 `{ref_link}`
-
-*📊 Estadísticas:*
-• Referidos actuales: {len(user_data['referrals'])}
-• Ganancias por referidos: {len(user_data['referrals']) * REFERRAL_BONUS:.2f} USDT
 """
         keyboard = [[InlineKeyboardButton("🔙 Menú", callback_data='menu')]]
         await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='Markdown')
@@ -147,9 +142,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif query.data == 'withdraw':
         balance = user_data['balance']
         if balance < MIN_WITHDRAWAL:
-            text = f"❌ *Saldo insuficiente*\n\n💰 *Mínimo para retirar:* {MIN_WITHDRAWAL} USDT\n💳 *Tu saldo:* {balance:.2f} USDT\n\n*Faltan:* {MIN_WITHDRAWAL - balance:.2f} USDT\n\n🎁 *Consejo:* Invita amigos para ganar más rápido."
+            text = f"❌ *Saldo insuficiente*\n\n💰 *Mínimo para retirar:* {MIN_WITHDRAWAL} USDT\n💳 *Tu saldo:* {balance:.2f} USDT"
         else:
-            text = f"✅ *¡Puedes retirar!*\n\n💰 *Saldo disponible:* {balance:.2f} USDT\n\n📧 *Contacta al administrador:*\n👉 @admin_gold\n\n🆔 *Tu ID:* {user_id}\n📝 *Envía este mensaje al admin:*\n\"Quiero retirar {balance:.2f} USDT - ID: {user_id}\""
+            text = f"✅ *¡Puedes retirar!*\n\n💰 *Saldo disponible:* {balance:.2f} USDT\n\n📧 *Contacta al administrador:* @admin_gold"
         keyboard = [[InlineKeyboardButton("🔙 Menú", callback_data='menu')]]
         await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='Markdown')
     
@@ -159,12 +154,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         if last_bonus:
             last_date = datetime.fromisoformat(last_bonus)
-            time_diff = now - last_date
-            if time_diff < timedelta(hours=24):
-                horas_restantes = 24 - time_diff.total_seconds() / 3600
-                horas = int(horas_restantes)
-                minutos = int((horas_restantes - horas) * 60)
-                text = f"⏰ *Ya reclamaste hoy*\n\n🕒 *Próximo bono en:* {horas}h {minutos}m\n\n📅 *Último bono:* {last_date.strftime('%d/%m/%Y %H:%M')}"
+            if now - last_date < timedelta(hours=24):
+                horas_restantes = 24 - (now - last_date).total_seconds() / 3600
+                text = f"⏰ *Ya reclamaste hoy*\n\nVuelve en {horas_restantes:.1f} horas"
                 keyboard = [[InlineKeyboardButton("🔙 Menú", callback_data='menu')]]
                 await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='Markdown')
                 return
@@ -174,7 +166,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_data['last_daily'] = now.isoformat()
         update_user(user_id, user_data)
         
-        text = f"✅ *¡Bono diario de {DAILY_BONUS} USDT!*\n\n💰 *Nuevo saldo:* {user_data['balance']:.2f} USDT\n🎯 *Próximo bono:* Mañana a esta hora\n\n👥 *Consejo:* Invita amigos para ganar {REFERRAL_BONUS} USDT extra por cada uno."
+        text = f"✅ *¡Bono diario de {DAILY_BONUS} USDT!*\n\n💰 *Nuevo saldo:* {user_data['balance']:.2f} USDT"
         keyboard = [[InlineKeyboardButton("🔙 Menú", callback_data='menu')]]
         await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='Markdown')
     
@@ -208,10 +200,6 @@ async def admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
 📊 *Usuarios totales:* {total_users}
 💰 *Saldo total en sistema:* {total_balance:.2f} USDT
 👨‍💼 *Admin ID:* {ADMIN_ID}
-🔄 *Comandos disponibles:*
-• /admin - Este panel
-• /broadcast <mensaje> - Enviar a todos (próximamente)
-• /stats - Estadísticas detalladas
 """
     await update.message.reply_text(text, parse_mode='Markdown')
 
@@ -245,7 +233,6 @@ def home():
                 </div>
                 <p>🌐 Bot alojado en Render.com</p>
                 <a href="https://t.me/Gojld_bot" class="btn">🚀 Usar el Bot en Telegram</a>
-                <p style="margin-top: 20px; font-size: 0.9em;">© 2024 Gold USDT Bot - Todos los derechos reservados</p>
             </div>
         </body>
     </html>
@@ -254,18 +241,6 @@ def home():
 @web_app.route('/health')
 def health():
     return "OK", 200
-
-@web_app.route('/stats')
-def stats():
-    total_users, total_balance = get_all_users()
-    return {
-        "status": "online",
-        "bot": "Gold USDT Bot",
-        "username": "@Gojld_bot",
-        "total_users": total_users,
-        "total_balance": total_balance,
-        "timestamp": datetime.now().isoformat()
-    }
 
 # ===== MAIN =====
 def main():
@@ -298,7 +273,7 @@ def main():
     print("📊 Bot funcionando 24/7 en Render.com")
     print("🎉 ¡El bot está listo para usar! Visita: https://t.me/Gojld_bot")
     
-    app_bot.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=True)
+    app_bot.run_polling()
 
 if __name__ == '__main__':
     main()
